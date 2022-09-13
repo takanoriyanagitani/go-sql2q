@@ -26,6 +26,13 @@ func (o Option[T]) Value() T       { return o.optionValue() }
 func (o Option[T]) Empty() bool    { return o.optionEmpty() }
 func (o Option[T]) HasValue() bool { return !o.Empty() }
 
+func (o Option[T]) OrElse(f func() Option[T]) Option[T] {
+	if o.HasValue() {
+		return o
+	}
+	return f()
+}
+
 func OptionMap[T, U any](o Option[T], f func(T) U) Option[U] {
 	if o.HasValue() {
 		var t T = o.Value()

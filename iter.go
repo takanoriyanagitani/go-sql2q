@@ -10,6 +10,17 @@ func IterReduce[T, U any](i Iter[T], init U, reducer func(state U, item T) U) U 
 	return state
 }
 
+func IterReduceFilter[T, U any](i Iter[T], init U, filter func(T) bool, reducer func(state U, item T) U) U {
+	state := init
+	for o := i(); o.HasValue(); o = i() {
+		var t T = o.Value()
+		if filter(t) {
+			state = reducer(state, t)
+		}
+	}
+	return state
+}
+
 func IterFromArray[T any](a []T) Iter[T] {
 	ix := 0
 	return func() Option[T] {

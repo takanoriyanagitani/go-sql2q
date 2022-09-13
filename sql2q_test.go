@@ -34,3 +34,27 @@ func checkNg(t *testing.T, e error, msg func() string) {
 		t.Fatalf(msg())
 	}
 }
+
+func TestAll(t *testing.T) {
+	t.Parallel()
+
+	t.Run("QueueBuilder", func(t *testing.T) {
+		t.Parallel()
+
+		t.Run("Build", func(t *testing.T) {
+			t.Parallel()
+
+			t.Run("empty", func(t *testing.T) {
+				t.Parallel()
+
+				bldr := QueueBuilder{}
+				_, e := bldr.Build()
+				checkNg(t, e, func() string { return "Must fail" })
+			})
+		})
+	})
+
+	t.Run("Queue", func(t *testing.T) {
+		t.Parallel()
+	})
+}
