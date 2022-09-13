@@ -30,9 +30,6 @@ var packMsg p2q.Pack = func(ctx context.Context, msgs []p2q.Msg) (p2q.Msg, error
 
 var jsonl2msgs p2q.Unpack = func(ctx context.Context, packed p2q.Msg) ([]p2q.Msg, error) {
 	var msgs []byte = packed.Data()
-	if nil == msgs {
-		return nil, nil
-	}
 	var sep []byte = []byte("\n")
 	var splited [][]byte = bytes.Split(msgs, sep)
 	var isp p2q.Iter[[]byte] = p2q.IterFromArray(splited)
