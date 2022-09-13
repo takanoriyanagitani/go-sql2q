@@ -35,3 +35,27 @@ func (i Iter[T]) ToArray() (a []T) {
 	}
 	return
 }
+
+func (i Iter[T]) Count() int {
+	return IterReduce(i, 0, func(cnt int, _ T) int {
+		return cnt + 1
+	})
+}
+
+func IterInts(lbi, ube int) Iter[int] {
+	ix := lbi
+	return func() Option[int] {
+		if ix < ube {
+			i := ix
+			ix += 1
+			return OptionNew(i)
+		}
+		return OptionEmpty[int]()
+	}
+}
+
+func IterEmpty[T any]() Iter[T] {
+	return func() Option[T] {
+		return OptionEmpty[T]()
+	}
+}
