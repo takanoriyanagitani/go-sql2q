@@ -21,3 +21,17 @@ func IterFromArray[T any](a []T) Iter[T] {
 		return OptionEmpty[T]()
 	}
 }
+
+func IterMap[T, U any](i Iter[T], f func(T) U) Iter[U] {
+	return func() Option[U] {
+		var ot Option[T] = i()
+		return OptionMap(ot, f)
+	}
+}
+
+func (i Iter[T]) ToArray() (a []T) {
+	for o := i(); o.HasValue(); o = i() {
+		a = append(a, o.Value())
+	}
+	return
+}
