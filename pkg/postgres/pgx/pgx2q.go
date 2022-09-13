@@ -28,7 +28,12 @@ func pgxNew(connStr string) func(tableName validTableName, max int64) (pgxq, err
 		if nil != e {
 			return pgxq{}, e
 		}
-		return dbNew(db, tableName, max)
+		q, e := dbNew(db, tableName, max)
+		if nil != e {
+			_ = db.Close()
+			return pgxq{}, e
+		}
+		return q, nil
 	}
 }
 
@@ -68,8 +73,7 @@ func QueueBuilderNew(conf Config) func(connStr string) (p2q.Queue, error) {
 		var qNew func(tableName validTableName, max int64) (pgxq, error) = pgxNew(connStr)
 		p, e := qNew(conf.ValidName(), conf.MaxQueue())
 		if nil != e {
-			p.Close()
-			return
+			return q, e
 		}
 		return p.ToQueue()
 	}
