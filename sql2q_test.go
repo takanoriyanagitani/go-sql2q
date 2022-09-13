@@ -22,3 +22,15 @@ func checker[T comparable](t *testing.T, got, expected T) {
 }
 
 var checkBytes func(t *testing.T, got, expected []byte) = checkerBuilder(func(a, b []byte) (same bool) { return 0 == bytes.Compare(a, b) })
+
+func checkOk(t *testing.T, e error, msg func() string) {
+	if nil != e {
+		t.Fatalf(msg())
+	}
+}
+
+func checkNg(t *testing.T, e error, msg func() string) {
+	if nil == e {
+		t.Fatalf(msg())
+	}
+}
