@@ -74,6 +74,26 @@ func checkNg(t *testing.T, e error, msg func() string) {
 	}
 }
 
+func chkOk(e error, msg func() string) func(t *testing.T) {
+	return func(t *testing.T) {
+		checkOk(t, e, msg)
+	}
+}
+
+func chkNg(e error, msg func() string) func(t *testing.T) {
+	return func(t *testing.T) {
+		checkNg(t, e, msg)
+	}
+}
+
+func chkOrPanic(e error) func(t *testing.T) {
+	return func(t *testing.T) {
+		if nil != e {
+			panic(e)
+		}
+	}
+}
+
 func TestAll(t *testing.T) {
 	t.Parallel()
 
@@ -171,6 +191,24 @@ func TestAll(t *testing.T) {
 				})
 				checkNg(t, e, func() string { return "Must fail" })
 			})
+
+			t.Run("callback error", func(t *testing.T) {
+				t.Parallel()
+
+				q, e := MemQueueNew(3)
+				if nil != e {
+					t.Fatalf("Unable to create in-mem q: %v", e)
+				}
+				defer q.Close()
+
+				e = q.Push(context.Background(), []byte("hw"))
+				checkOk(t, e, func() string { return "Must not fail" })
+
+				e = q.Pop(context.Background(), func(_ context.Context, m Msg) error {
+					return fmt.Errorf("Must fail")
+				})
+				checkNg(t, e, func() string { return "Must fail" })
+			})
 		})
 
 		t.Run("PopMany", func(t *testing.T) {
@@ -253,6 +291,131 @@ func TestAll(t *testing.T) {
 					return nil
 				})
 				checkOk(t, e, func() string { return "Must not fail" })
+			})
+
+			t.Run("callback error", func(t *testing.T) {
+				t.Parallel()
+
+				q, e := MemQueueNew(3)
+				if nil != e {
+					t.Fatalf("Unable to create in-mem q: %v", e)
+				}
+				defer q.Close()
+
+				c, e := simpleCodecNew()
+				if nil != e {
+					t.Fatalf("Unexpected error: %v", e)
+				}
+
+				e = q.PushMany(context.Background(), []Msg{
+					MsgNew(-1, []byte(`idx,1,csv,sample`)),
+				}, c)
+				checkOk(t, e, func() string { return "Must not fail" })
+
+				e = q.PopMany(context.Background(), c, func(_ context.Context, msgs []Msg) error {
+					return fmt.Errorf("Must fail")
+				})
+				checkNg(t, e, func() string { return "Must fail" })
+			})
+
+			t.Run("invalid unpack", func(t *testing.T) {
+				t.Parallel()
+
+				q, e := MemQueueNew(3)
+				if nil != e {
+					t.Fatalf("Unable to create in-mem q: %v", e)
+				}
+				defer q.Close()
+
+				var upk Unpack = func(_ context.Context, p Msg) ([]Msg, error) {
+					return nil, fmt.Errorf("Must fail")
+				}
+				var pck Pack = func(_ context.Context, msgs []Msg) (m Msg, e error) {
+					return
+				}
+
+				c, e := CodecNew(pck, upk)
+				t.Run("codec check", chkOk(e, func() string { return "Must not fail" }))
+
+				e = q.PushMany(context.Background(), []Msg{
+					MsgNew(-1, []byte(`idx,1,csv,sample`)),
+				}, c)
+				t.Run("push check", chkOk(e, func() string { return "Must not fail" }))
+
+				e = q.PopMany(context.Background(), c, func(_ context.Context, msgs []Msg) error {
+					return fmt.Errorf("Must fail")
+				})
+				t.Run("pop check", chkNg(e, func() string { return "Must fail" }))
+			})
+		})
+
+		t.Run("PushMany", func(t *testing.T) {
+			t.Parallel()
+
+			t.Run("invalid pack", func(t *testing.T) {
+				t.Parallel()
+
+				q, e := MemQueueNew(3)
+				if nil != e {
+					t.Fatalf("Unable to create in-mem q: %v", e)
+				}
+				defer q.Close()
+
+				var upk Unpack = func(_ context.Context, p Msg) ([]Msg, error) {
+					return nil, nil
+				}
+				var pck Pack = func(_ context.Context, msgs []Msg) (m Msg, e error) {
+					e = fmt.Errorf("Must fail")
+					return
+				}
+
+				c, e := CodecNew(pck, upk)
+				t.Run("codec check", chkOk(e, func() string { return "Must not fail" }))
+
+				e = q.PushMany(context.Background(), []Msg{
+					MsgNew(-1, []byte(`idx,1,csv,sample`)),
+				}, c)
+				t.Run("push check", chkNg(e, func() string { return "Must fail" }))
+			})
+
+			t.Run("too many", func(t *testing.T) {
+				t.Parallel()
+
+				q, e := MemQueueNew(3)
+				if nil != e {
+					t.Fatalf("Unable to create in-mem q: %v", e)
+				}
+				defer q.Close()
+
+				var upk Unpack = func(_ context.Context, p Msg) ([]Msg, error) {
+					return nil, nil
+				}
+				var pck Pack = func(_ context.Context, msgs []Msg) (m Msg, e error) {
+					return
+				}
+
+				c, e := CodecNew(pck, upk)
+				t.Run("codec check", chkOk(e, func() string { return "Must not fail" }))
+
+				e = q.PushMany(context.Background(), []Msg{
+					MsgNew(-1, []byte(`idx,1,csv,sample`)),
+				}, c)
+				checkOk(t, e, func() string { return "Must not fail" })
+
+				e = q.PushMany(context.Background(), []Msg{
+					MsgNew(-1, []byte(`idx,1,csv,sample`)),
+				}, c)
+				checkOk(t, e, func() string { return "Must not fail" })
+
+				e = q.PushMany(context.Background(), []Msg{
+					MsgNew(-1, []byte(`idx,1,csv,sample`)),
+				}, c)
+				checkOk(t, e, func() string { return "Must not fail" })
+
+				e = q.PushMany(context.Background(), []Msg{
+					MsgNew(-1, []byte(`idx,1,csv,sample`)),
+				}, c)
+				checkNg(t, e, func() string { return "Must fail" })
 			})
 		})
 	})

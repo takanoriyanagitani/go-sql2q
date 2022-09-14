@@ -90,8 +90,8 @@ func (q Queue) Push(ctx context.Context, data []byte) error {
 	if nil != e {
 		return e
 	}
-	if q.lmt(ctx) < cnt {
-		return fmt.Errorf("Out of queue")
+	if q.lmt(ctx) <= cnt {
+		return fmt.Errorf("Out of capacity. lmt: %v, cnt: %v", q.lmt(ctx), cnt)
 	}
 	return q.add(ctx, data)
 }
