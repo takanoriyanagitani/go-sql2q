@@ -7,6 +7,43 @@ import (
 	"testing"
 )
 
+func simpleCodecNew() (Codec, error) {
+	sep := []byte("\n")
+	return CodecNew(
+		func(_ context.Context, msgs []Msg) (Msg, error) {
+			var imsg Iter[Msg] = IterFromArray(msgs)
+			var msg Msg = MsgNew(-1, nil)
+			return IterReduce(imsg, msg, func(packed Msg, m Msg) Msg {
+				var buf bytes.Buffer
+
+				var old []byte = packed.Data()
+				if nil != old {
+					_, _ = buf.Write(packed.Data()) // never fail
+				}
+
+				_, _ = buf.Write(m.Data())
+				_, _ = buf.Write(sep)
+
+				return packed.WithData(buf.Bytes())
+			}), nil
+		},
+		func(_ context.Context, packed Msg) ([]Msg, error) {
+			var serialized []byte = packed.Data()
+			var splited [][]byte = bytes.Split(serialized, sep)
+			var ibs Iter[[]byte] = IterFromArray(splited)
+			var imsg Iter[Msg] = IterMap(ibs, func(b []byte) Msg {
+				return MsgNew(-1, b)
+			})
+			var ret []Msg = imsg.ToArray()
+			if 0 < len(ret) {
+				var nl int = len(ret) - 1
+				return ret[:nl], nil
+			}
+			return nil, nil
+		},
+	)
+}
+
 func checkerBuilder[T any](comp func(a, b T) (same bool)) func(t *testing.T, got, expected T) {
 	return func(t *testing.T, got, expected T) {
 		var same bool = comp(got, expected)
@@ -133,6 +170,89 @@ func TestAll(t *testing.T) {
 					panic("Must not call")
 				})
 				checkNg(t, e, func() string { return "Must fail" })
+			})
+		})
+
+		t.Run("PopMany", func(t *testing.T) {
+			t.Parallel()
+
+			t.Run("empty", func(t *testing.T) {
+				t.Parallel()
+
+				q, e := MemQueueNew(3)
+				if nil != e {
+					t.Fatalf("Unable to create in-mem q: %v", e)
+				}
+				defer q.Close()
+
+				c, e := simpleCodecNew()
+				if nil != e {
+					t.Fatalf("Unexpected error: %v", e)
+				}
+
+				e = q.PushMany(context.Background(), nil, c)
+				checkOk(t, e, func() string { return "Must not fail" })
+
+				e = q.PopMany(context.Background(), c, func(_ context.Context, msgs []Msg) error {
+					panic("Must not call")
+				})
+				checkNg(t, e, func() string { return "Must fail" })
+			})
+
+			t.Run("single", func(t *testing.T) {
+				t.Parallel()
+
+				q, e := MemQueueNew(3)
+				if nil != e {
+					t.Fatalf("Unable to create in-mem q: %v", e)
+				}
+				defer q.Close()
+
+				c, e := simpleCodecNew()
+				if nil != e {
+					t.Fatalf("Unexpected error: %v", e)
+				}
+
+				e = q.PushMany(context.Background(), []Msg{
+					MsgNew(-1, []byte(`idx,1,csv,sample`)),
+				}, c)
+				checkOk(t, e, func() string { return "Must not fail" })
+
+				e = q.PopMany(context.Background(), c, func(_ context.Context, msgs []Msg) error {
+					checker(t, len(msgs), 1)
+					return nil
+				})
+				checkOk(t, e, func() string { return "Must not fail" })
+			})
+
+			t.Run("multi", func(t *testing.T) {
+				t.Parallel()
+
+				q, e := MemQueueNew(3)
+				if nil != e {
+					t.Fatalf("Unable to create in-mem q: %v", e)
+				}
+				defer q.Close()
+
+				c, e := simpleCodecNew()
+				if nil != e {
+					t.Fatalf("Unexpected error: %v", e)
+				}
+
+				inMsgs := []Msg{
+					MsgNew(-1, []byte(`idx,1,csv,sample`)),
+					MsgNew(-1, []byte(`idx,2,csv,sample`)),
+				}
+				e = q.PushMany(context.Background(), inMsgs, c)
+				checkOk(t, e, func() string { return "Must not fail" })
+
+				e = q.PopMany(context.Background(), c, func(_ context.Context, msgs []Msg) error {
+					checker(t, len(msgs), 2)
+					checkBytes(t, inMsgs[0].Data(), msgs[0].Data())
+					checkBytes(t, inMsgs[1].Data(), msgs[1].Data())
+					return nil
+				})
+				checkOk(t, e, func() string { return "Must not fail" })
 			})
 		})
 	})

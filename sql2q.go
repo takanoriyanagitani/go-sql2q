@@ -98,6 +98,10 @@ func (q Queue) Push(ctx context.Context, data []byte) error {
 
 // PushMany push many messages as single msg.
 func (q Queue) PushMany(ctx context.Context, messages []Msg, codec Codec) error {
+	if len(messages) < 1 {
+		return nil
+	}
+
 	packed, e := codec.Pack(ctx, messages)
 	if nil != e {
 		return e

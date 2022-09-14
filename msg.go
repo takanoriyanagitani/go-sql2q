@@ -15,6 +15,11 @@ type Msg struct {
 
 func (m Msg) Data() []byte { return m.dt }
 
+func (m Msg) WithData(dt []byte) Msg {
+	m.dt = dt
+	return m
+}
+
 func MsgNew(i int64, dt []byte) Msg {
 	var id Id = Id{id: i}
 	return Msg{
