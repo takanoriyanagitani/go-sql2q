@@ -2,6 +2,8 @@ package sql2q
 
 import (
 	"bytes"
+	"context"
+	"fmt"
 	"testing"
 )
 
@@ -56,5 +58,82 @@ func TestAll(t *testing.T) {
 
 	t.Run("Queue", func(t *testing.T) {
 		t.Parallel()
+
+		t.Run("Pop", func(t *testing.T) {
+			t.Parallel()
+
+			t.Run("empty", func(t *testing.T) {
+				t.Parallel()
+
+				q, e := MemQueueNew(3)
+				if nil != e {
+					t.Fatalf("Unable to create in-mem q: %v", e)
+				}
+				defer q.Close()
+
+				e = q.Pop(context.Background(), func(ctx context.Context, msg Msg) error {
+					panic("Must not call")
+				})
+				checkNg(t, e, func() string { return "Must fail" })
+			})
+
+			t.Run("single", func(t *testing.T) {
+				t.Parallel()
+
+				q, e := MemQueueNew(3)
+				if nil != e {
+					t.Fatalf("Unable to create in-mem q: %v", e)
+				}
+				defer q.Close()
+
+				e = q.Push(context.Background(), []byte("hw"))
+				checkOk(t, e, func() string { return "Must not fail" })
+
+				e = q.Pop(context.Background(), func(_ context.Context, m Msg) error {
+					checkBytes(t, m.Data(), []byte("hw"))
+					return nil
+				})
+				checkOk(t, e, func() string { return fmt.Sprintf("Must not fail: %v", e) })
+
+				e = q.Pop(context.Background(), func(_ context.Context, m Msg) error {
+					panic("Must not call")
+				})
+				checkNg(t, e, func() string { return "Must fail" })
+			})
+
+			t.Run("multi", func(t *testing.T) {
+				t.Parallel()
+
+				q, e := MemQueueNew(3)
+				if nil != e {
+					t.Fatalf("Unable to create in-mem q: %v", e)
+				}
+				defer q.Close()
+
+				e = q.Push(context.Background(), []byte("hw"))
+				checkOk(t, e, func() string { return "Must not fail" })
+
+				e = q.Push(context.Background(), []byte("hh"))
+				checkOk(t, e, func() string { return "Must not fail" })
+
+				chk := func(expected []byte) func(t *testing.T) {
+					return func(t *testing.T) {
+						e = q.Pop(context.Background(), func(_ context.Context, m Msg) error {
+							checkBytes(t, m.Data(), expected)
+							return nil
+						})
+						checkOk(t, e, func() string { return fmt.Sprintf("Must not fail: %v", e) })
+					}
+				}
+
+				t.Run("last", chk([]byte("hw")))
+				t.Run("first", chk([]byte("hh")))
+
+				e = q.Pop(context.Background(), func(_ context.Context, m Msg) error {
+					panic("Must not call")
+				})
+				checkNg(t, e, func() string { return "Must fail" })
+			})
+		})
 	})
 }
