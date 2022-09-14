@@ -26,6 +26,12 @@ func (o Option[T]) Value() T       { return o.optionValue() }
 func (o Option[T]) Empty() bool    { return o.optionEmpty() }
 func (o Option[T]) HasValue() bool { return !o.Empty() }
 
+func (o Option[T]) UnwrapOr(alt T) T {
+	if o.HasValue() {
+		return o.Value()
+	}
+	return alt
+}
 func (o Option[T]) OrElse(f func() Option[T]) Option[T] {
 	if o.HasValue() {
 		return o
