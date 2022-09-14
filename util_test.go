@@ -76,4 +76,36 @@ func TestUtil(t *testing.T) {
 			checkNg(t, e, func() string { return "Must fail" })
 		})
 	})
+
+	t.Run("PopLast", func(t *testing.T) {
+		t.Parallel()
+
+		t.Run("empty", func(t *testing.T) {
+			t.Parallel()
+
+			var neo []int = PopLast[int](nil)
+			checker(t, len(neo), 0)
+		})
+
+		t.Run("single", func(t *testing.T) {
+			t.Parallel()
+
+			var neo []int = PopLast[int]([]int{634})
+			checker(t, len(neo), 0)
+		})
+
+		t.Run("many", func(t *testing.T) {
+			t.Parallel()
+
+			var neo []int = PopLast[int]([]int{
+				333,
+				634,
+				3776,
+			})
+			checker(t, len(neo), 2)
+
+			checker(t, neo[0], 333)
+			checker(t, neo[1], 634)
+		})
+	})
 }

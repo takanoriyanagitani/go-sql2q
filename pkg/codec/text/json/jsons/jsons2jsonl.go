@@ -16,15 +16,12 @@ func msgs2jsonl(ctx context.Context, msgs []p2q.Msg) ([]byte, error) {
 		_, _ = buf.Write(dat) // always nil error
 		_, _ = buf.Write(lf)  // always nil error
 		return nil
-	})
+	}) // always nil
 	return buf.Bytes(), e
 }
 
 var packMsg p2q.Pack = func(ctx context.Context, msgs []p2q.Msg) (p2q.Msg, error) {
-	packed, e := msgs2jsonl(ctx, msgs)
-	if nil != e {
-		return p2q.MsgNew(-1, nil), e
-	}
+	packed, _ := msgs2jsonl(ctx, msgs) // always nil error
 	return p2q.MsgNew(-1, packed), nil
 }
 
@@ -37,11 +34,7 @@ var jsonl2msgs p2q.Unpack = func(ctx context.Context, packed p2q.Msg) ([]p2q.Msg
 		return p2q.MsgNew(-1, dt)
 	})
 	var arr []p2q.Msg = imsg.ToArray()
-	if 0 < len(arr) {
-		neo := len(arr) - 1
-		return arr[:neo], nil
-	}
-	return arr, nil
+	return p2q.PopLast(arr), nil
 }
 
 func JsonsCodecNew() (p2q.Codec, error) { return p2q.CodecNew(packMsg, jsonl2msgs) }

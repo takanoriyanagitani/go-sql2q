@@ -16,3 +16,11 @@ func ErrorFromBool(ok bool, ng func() error) error {
 	}
 	return ng()
 }
+
+func PopLast[T any](s []T) []T {
+	if 0 < len(s) {
+		var neo int = len(s) - 1
+		return s[:neo]
+	}
+	return s
+}
