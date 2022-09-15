@@ -41,7 +41,7 @@ func (m *memQueue) Get(_ context.Context) (Msg, error) {
 		var k int = m.key[0]
 		return m.raw[k], nil
 	}
-	return MsgNew(-1, nil), fmt.Errorf("No data")
+	return MsgEmpty(), fmt.Errorf("No data")
 }
 
 func (m *memQueue) Del(_ context.Context, id Id) error {

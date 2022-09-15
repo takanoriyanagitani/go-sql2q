@@ -27,3 +27,5 @@ func MsgNew(i int64, dt []byte) Msg {
 		dt,
 	}
 }
+
+func MsgEmpty() Msg { return MsgNew(-1, nil) }

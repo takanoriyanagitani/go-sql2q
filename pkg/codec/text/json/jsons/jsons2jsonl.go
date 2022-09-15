@@ -22,7 +22,7 @@ func msgs2jsonl(ctx context.Context, msgs []p2q.Msg) ([]byte, error) {
 
 var packMsg p2q.Pack = func(ctx context.Context, msgs []p2q.Msg) (p2q.Msg, error) {
 	packed, _ := msgs2jsonl(ctx, msgs) // always nil error
-	return p2q.MsgNew(-1, packed), nil
+	return p2q.MsgEmpty().WithData(packed), nil
 }
 
 var jsonl2msgs p2q.Unpack = func(ctx context.Context, packed p2q.Msg) ([]p2q.Msg, error) {
@@ -31,7 +31,7 @@ var jsonl2msgs p2q.Unpack = func(ctx context.Context, packed p2q.Msg) ([]p2q.Msg
 	var splited [][]byte = bytes.Split(msgs, sep)
 	var isp p2q.Iter[[]byte] = p2q.IterFromArray(splited)
 	var imsg p2q.Iter[p2q.Msg] = p2q.IterMap(isp, func(dt []byte) p2q.Msg {
-		return p2q.MsgNew(-1, dt)
+		return p2q.MsgEmpty().WithData(dt)
 	})
 	var arr []p2q.Msg = imsg.ToArray()
 	return p2q.PopLast(arr), nil

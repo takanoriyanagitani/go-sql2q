@@ -57,7 +57,7 @@ func TestAll(t *testing.T) {
 				json := `{"bucket":"data_2022_09_13_cafef00ddeadbeafface864299792458", "key":"15:13:46.0Z", "val":"[333,634]"}`
 				jsonl := json + "\n"
 				msgs := []p2q.Msg{
-					p2q.MsgNew(-1, []byte(json)),
+					p2q.MsgEmpty().WithData([]byte(json)),
 				}
 
 				msg, e := conv.Pack(context.Background(), msgs)
@@ -76,8 +76,8 @@ func TestAll(t *testing.T) {
 				jsonl := json1 + "\n" + json2 + "\n"
 
 				msgs := []p2q.Msg{
-					p2q.MsgNew(-1, []byte(json1)),
-					p2q.MsgNew(-1, []byte(json2)),
+					p2q.MsgEmpty().WithData([]byte(json1)),
+					p2q.MsgEmpty().WithData([]byte(json2)),
 				}
 
 				msg, e := conv.Pack(context.Background(), msgs)
@@ -94,7 +94,7 @@ func TestAll(t *testing.T) {
 			t.Parallel()
 
 			t.Run("empty", func(t *testing.T) {
-				msgs, e := conv.Unpack(context.Background(), p2q.MsgNew(-1, nil))
+				msgs, e := conv.Unpack(context.Background(), p2q.MsgEmpty())
 				if nil != e {
 					t.Fatalf("Unable to unpack: %v", e)
 				}
@@ -106,7 +106,7 @@ func TestAll(t *testing.T) {
 				json1 := `{"bucket":"data_2022_09_12_cafef00ddeadbeafface864299792458", "key":"15:27:36.0Z", "val":"[333,634]"}`
 				jsonl := json1 + "\n"
 
-				msgs, e := conv.Unpack(context.Background(), p2q.MsgNew(-1, []byte(jsonl)))
+				msgs, e := conv.Unpack(context.Background(), p2q.MsgEmpty().WithData([]byte(jsonl)))
 				if nil != e {
 					t.Fatalf("Unable to unpack: %v", e)
 				}
@@ -121,7 +121,7 @@ func TestAll(t *testing.T) {
 				json2 := `{"bucket":"data_2022_09_12_f00ddeadbeaffacecafe864299792458", "key":"15:32:25.0Z", "val":"[634,599]"}`
 				jsonl := json1 + "\n" + json2 + "\n"
 
-				msgs, e := conv.Unpack(context.Background(), p2q.MsgNew(-1, []byte(jsonl)))
+				msgs, e := conv.Unpack(context.Background(), p2q.MsgEmpty().WithData([]byte(jsonl)))
 				if nil != e {
 					t.Fatalf("Unable to unpack: %v", e)
 				}

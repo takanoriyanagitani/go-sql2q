@@ -12,7 +12,7 @@ func simpleCodecNew() (Codec, error) {
 	return CodecNew(
 		func(_ context.Context, msgs []Msg) (Msg, error) {
 			var imsg Iter[Msg] = IterFromArray(msgs)
-			var msg Msg = MsgNew(-1, nil)
+			var msg Msg = MsgEmpty()
 			return IterReduce(imsg, msg, func(packed Msg, m Msg) Msg {
 				var buf bytes.Buffer
 
@@ -32,7 +32,7 @@ func simpleCodecNew() (Codec, error) {
 			var splited [][]byte = bytes.Split(serialized, sep)
 			var ibs Iter[[]byte] = IterFromArray(splited)
 			var imsg Iter[Msg] = IterMap(ibs, func(b []byte) Msg {
-				return MsgNew(-1, b)
+				return MsgEmpty().WithData(b)
 			})
 			var ret []Msg = imsg.ToArray()
 			if 0 < len(ret) {
@@ -252,7 +252,7 @@ func TestAll(t *testing.T) {
 				}
 
 				e = q.PushMany(context.Background(), []Msg{
-					MsgNew(-1, []byte(`idx,1,csv,sample`)),
+					MsgEmpty().WithData([]byte(`idx,1,csv,sample`)),
 				}, c)
 				checkOk(t, e, func() string { return "Must not fail" })
 
@@ -278,8 +278,8 @@ func TestAll(t *testing.T) {
 				}
 
 				inMsgs := []Msg{
-					MsgNew(-1, []byte(`idx,1,csv,sample`)),
-					MsgNew(-1, []byte(`idx,2,csv,sample`)),
+					MsgEmpty().WithData([]byte(`idx,1,csv,sample`)),
+					MsgEmpty().WithData([]byte(`idx,2,csv,sample`)),
 				}
 				e = q.PushMany(context.Background(), inMsgs, c)
 				checkOk(t, e, func() string { return "Must not fail" })
@@ -308,7 +308,7 @@ func TestAll(t *testing.T) {
 				}
 
 				e = q.PushMany(context.Background(), []Msg{
-					MsgNew(-1, []byte(`idx,1,csv,sample`)),
+					MsgEmpty().WithData([]byte(`idx,1,csv,sample`)),
 				}, c)
 				checkOk(t, e, func() string { return "Must not fail" })
 
@@ -338,7 +338,7 @@ func TestAll(t *testing.T) {
 				t.Run("codec check", chkOk(e, func() string { return "Must not fail" }))
 
 				e = q.PushMany(context.Background(), []Msg{
-					MsgNew(-1, []byte(`idx,1,csv,sample`)),
+					MsgEmpty().WithData([]byte(`idx,1,csv,sample`)),
 				}, c)
 				t.Run("push check", chkOk(e, func() string { return "Must not fail" }))
 
@@ -373,7 +373,7 @@ func TestAll(t *testing.T) {
 				t.Run("codec check", chkOk(e, func() string { return "Must not fail" }))
 
 				e = q.PushMany(context.Background(), []Msg{
-					MsgNew(-1, []byte(`idx,1,csv,sample`)),
+					MsgEmpty().WithData([]byte(`idx,1,csv,sample`)),
 				}, c)
 				t.Run("push check", chkNg(e, func() string { return "Must fail" }))
 			})
@@ -398,22 +398,22 @@ func TestAll(t *testing.T) {
 				t.Run("codec check", chkOk(e, func() string { return "Must not fail" }))
 
 				e = q.PushMany(context.Background(), []Msg{
-					MsgNew(-1, []byte(`idx,1,csv,sample`)),
+					MsgEmpty().WithData([]byte(`idx,1,csv,sample`)),
 				}, c)
 				checkOk(t, e, func() string { return "Must not fail" })
 
 				e = q.PushMany(context.Background(), []Msg{
-					MsgNew(-1, []byte(`idx,1,csv,sample`)),
+					MsgEmpty().WithData([]byte(`idx,1,csv,sample`)),
 				}, c)
 				checkOk(t, e, func() string { return "Must not fail" })
 
 				e = q.PushMany(context.Background(), []Msg{
-					MsgNew(-1, []byte(`idx,1,csv,sample`)),
+					MsgEmpty().WithData([]byte(`idx,1,csv,sample`)),
 				}, c)
 				checkOk(t, e, func() string { return "Must not fail" })
 
 				e = q.PushMany(context.Background(), []Msg{
-					MsgNew(-1, []byte(`idx,1,csv,sample`)),
+					MsgEmpty().WithData([]byte(`idx,1,csv,sample`)),
 				}, c)
 				checkNg(t, e, func() string { return "Must fail" })
 			})
