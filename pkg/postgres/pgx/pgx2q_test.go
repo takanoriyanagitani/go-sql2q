@@ -78,7 +78,7 @@ func TestAll(t *testing.T) {
 		const tablereset string = `
             DROP TABLE IF EXISTS tablename_queue
         `
-		const constr string = ""
+		var constr string = "dbname=" + ITEST_SQL2Q_PGX_DBNAME
 
 		func() {
 			db, e := sql.Open("pgx", constr)

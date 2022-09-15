@@ -24,3 +24,16 @@ func PopLast[T any](s []T) []T {
 	}
 	return s
 }
+
+func MustOk[T any](t T, e error) T {
+    if nil != e {
+        panic(e)
+    }
+    return t
+}
+
+func IfNg(ng error, f func()){
+    if nil != ng {
+        f()
+    }
+}
