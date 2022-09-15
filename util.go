@@ -26,14 +26,21 @@ func PopLast[T any](s []T) []T {
 }
 
 func MustOk[T any](t T, e error) T {
-    if nil != e {
-        panic(e)
-    }
-    return t
+	if nil != e {
+		panic(e)
+	}
+	return t
 }
 
-func IfNg(ng error, f func()){
-    if nil != ng {
-        f()
-    }
+func IfNg(ng error, f func()) {
+	if nil != ng {
+		f()
+	}
+}
+
+func Compose[T, U, V any](f func(T) U, g func(U) V) func(T) V {
+	return func(t T) V {
+		var u U = f(t)
+		return g(u)
+	}
 }
