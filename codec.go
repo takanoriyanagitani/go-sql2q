@@ -35,3 +35,10 @@ func CodecNew(ser Pack, de Unpack) (Codec, error) {
 	}
 	return c, e
 }
+
+func CodecMust(c Codec, e error) Codec {
+	if nil != e {
+		panic(e)
+	}
+	return c
+}
